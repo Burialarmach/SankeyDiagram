@@ -9,6 +9,8 @@ namespace Kant.Wpf.Controls.Chart
     public enum HighlightMode
     {
         MouseLeftButtonUp,
-        MouseEnter
+        MouseEnter,
+        Hybryd,
+
     }
 }

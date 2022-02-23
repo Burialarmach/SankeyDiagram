@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -30,7 +31,7 @@ namespace Kant.Wpf.Controls.Chart
 
         public void DiagramSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if(!diagram.IsLoaded)
+            if (!diagram.IsLoaded)
             {
                 return;
             }
@@ -151,17 +152,17 @@ namespace Kant.Wpf.Controls.Chart
             ClearDiagramCanvasChilds();
             styleManager.ClearHighlight();
 
-            if(currentSliceNodes != null)
+            if (currentSliceNodes != null)
             {
                 currentSliceNodes.Clear();
             }
 
-            if(currentNodes != null)
+            if (currentNodes != null)
             {
                 currentNodes.Clear();
             }
 
-            if(currentLinks != null)
+            if (currentLinks != null)
             {
                 currentLinks.Clear();
             }
@@ -182,9 +183,9 @@ namespace Kant.Wpf.Controls.Chart
         {
             measuredFirstLevelLabelWidth = measuredLastLevelLabelWidth = measuredLabelHeight = 0;
 
-            if(currentSliceNodes != null)
+            if (currentSliceNodes != null)
             {
-                foreach(var node in currentSliceNodes)
+                foreach (var node in currentSliceNodes)
                 {
                     node.IsLabelSizeMeasured = false;
                 }
@@ -220,12 +221,12 @@ namespace Kant.Wpf.Controls.Chart
 
         public void UpdateLabelStyle()
         {
-            if(currentSliceNodes == null)
+            if (currentSliceNodes == null)
             {
                 return;
             }
 
-            foreach(var node in currentSliceNodes)
+            foreach (var node in currentSliceNodes)
             {
                 node.Label.Style = diagram.LabelStyle;
             }
@@ -484,13 +485,13 @@ namespace Kant.Wpf.Controls.Chart
             var levelIndex = 0;
             var linkLength = 0.0;
 
-            while(remainNodes.Count > 0)
+            while (remainNodes.Count > 0)
             {
                 nextNodes = new List<SankeyNode>();
                 var nodeIndex = 0;
                 var nodeCount = remainNodes.Count;
 
-                for(; nodeIndex < nodeCount; nodeIndex++)
+                for (; nodeIndex < nodeCount; nodeIndex++)
                 {
                     var node = remainNodes[nodeIndex];
 
@@ -506,7 +507,7 @@ namespace Kant.Wpf.Controls.Chart
                     var linkIndex = 0;
                     var linkCount = node.OutLinks.Count;
 
-                    for(; linkIndex < linkCount; linkIndex++)
+                    for (; linkIndex < linkCount; linkIndex++)
                     {
                         nextNodes.Add(node.OutLinks[linkIndex].ToNode);
                     }
@@ -517,7 +518,7 @@ namespace Kant.Wpf.Controls.Chart
             }
 
             // move all the node without outLinks to end
-            foreach(var node in nodes)
+            foreach (var node in nodes)
             {
                 if (node.OutLinks.Count == 0)
                 {
@@ -541,7 +542,7 @@ namespace Kant.Wpf.Controls.Chart
                         measuredLabelHeight = MeasureHepler.MeasureString(nodes[0].Name, diagram.LabelStyle, CultureInfo.CurrentCulture).Height;
                     }
 
-                    if(!CheckInsufficientArea(measuredLabelHeight * 2, DiagramCanvas.ActualHeight))
+                    if (!CheckInsufficientArea(measuredLabelHeight * 2, DiagramCanvas.ActualHeight))
                     {
                         return null;
                     }
@@ -555,7 +556,7 @@ namespace Kant.Wpf.Controls.Chart
                         measuredFirstLevelLabelWidth = nodes.FindAll(n => n.X == 0).Max(n => MeasureHepler.MeasureString(n.Name, diagram.LabelStyle, CultureInfo.CurrentCulture).Width);
                     }
 
-                    if(!(measuredLastLevelLabelWidth > 0))
+                    if (!(measuredLastLevelLabelWidth > 0))
                     {
                         measuredLastLevelLabelWidth = nodes.FindAll(n => n.X == levelIndex - 1).Max(n => MeasureHepler.MeasureString(n.Name, diagram.LabelStyle, CultureInfo.CurrentCulture).Width);
                     }
@@ -586,7 +587,7 @@ namespace Kant.Wpf.Controls.Chart
 
             linkLength = (length - nodeThickness) / (levelIndex - 1);
 
-            foreach(var node in nodes)
+            foreach (var node in nodes)
             {
                 var max = Math.Max(node.InLinks.Sum(l => l.Weight), node.OutLinks.Sum(l => l.Weight));
 
@@ -723,7 +724,30 @@ namespace Kant.Wpf.Controls.Chart
                     },
                 }
             };
+            Point Middleleft = new Point((startPoint.X + line1EndPoint.X) / 2, (startPoint.Y + line1EndPoint.Y) / 2);
+            Point middleRight = new Point((line2EndPoint.X + bezier1EndPoint.X) / 2, (line2EndPoint.Y + bezier1EndPoint.Y) / 2);
+            Point middleMiddle = new Point((Middleleft.X + middleRight.X) / 2, (Middleleft.Y + middleRight.Y) / 2);
+            Binding bind = new Binding("IsHighlight");
+            bind.Source = link;
+            bind.Converter = new LinkVisibilitConv();
+            Border bd = new Border()
+            {
+                Background = new SolidColorBrush(Color.FromArgb(10, 51, 51, 51)),
+                CornerRadius = new CornerRadius(8),
+                Margin = new Thickness(-15, -12, 0, 0),
+                Child = new Label()
+                {
+                    Content = $"{link.Weight}",
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 14,
+                },
+            };
+            bd.SetBinding(Border.VisibilityProperty, bind);
 
+            Canvas.SetLeft(bd, middleMiddle.X);
+            Canvas.SetTop(bd, middleMiddle.Y);
+
+            DiagramCanvas.Children.Add(bd);
             link.Shape.Data = geometry;
 
             return link;
@@ -733,52 +757,136 @@ namespace Kant.Wpf.Controls.Chart
 
         private void LinkMouseEnter(object sender, MouseEventArgs e)
         {
-            if (diagram.HighlightMode == HighlightMode.MouseEnter)
+            if (diagram.HighlightMode == HighlightMode.Hybryd)
+            {
+                if (!clicked)
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+
+            }
+            else if (diagram.HighlightMode == HighlightMode.MouseEnter)
             {
                 diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
             }
+
         }
 
         private void LinkMouseLeave(object sender, MouseEventArgs e)
         {
-            if (diagram.HighlightMode == HighlightMode.MouseEnter)
+            if (diagram.HighlightMode == HighlightMode.Hybryd)
+            {
+                if (!clicked)
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+
+
+            }
+            else if (diagram.HighlightMode == HighlightMode.MouseEnter)
             {
                 diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
             }
+
         }
 
         private void LinkMouseLeftButtonUp(object sender, MouseEventArgs e)
         {
-            if (diagram.HighlightMode == HighlightMode.MouseLeftButtonUp)
+            if (diagram.HighlightMode == HighlightMode.Hybryd)
             {
-                diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+                SankeyLinkFinder j = diagram.GetValue(SankeyDiagram.HighlightLinkProperty) as SankeyLinkFinder;
+                SankeyLinkFinder source = ((FrameworkElement)e.OriginalSource).Tag as SankeyLinkFinder;
+                if (diagram.GetValue(SankeyDiagram.HighlightNodeProperty) != null)
+                {
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, null);
+                }
+                if (diagram.GetValue(SankeyDiagram.HighlightLinkProperty) == null)
+                {
+                    clicked = true;
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+                }
+                else if (j.From != source.From || j.To != source.To)
+                {
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+                    clicked = true;
+                }
+                else if (j.ToString() == ((FrameworkElement)e.OriginalSource).Tag.ToString())
+                {
+                    if (clicked == false && j.ToString() != ((FrameworkElement)e.OriginalSource).Tag.ToString())
+                        diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+
+                    clicked = !clicked;
+                }
+
+
             }
         }
 
         private void NodeMouseEnter(object sender, MouseEventArgs e)
         {
-            if (diagram.HighlightMode == HighlightMode.MouseEnter)
+            if (diagram.HighlightMode == HighlightMode.Hybryd)
             {
-                diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
+                if (!clicked)
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
+
             }
+            else if (diagram.HighlightMode == HighlightMode.MouseEnter)
+            {
+                diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, (SankeyLinkFinder)((Path)e.OriginalSource).Tag);
+            }
+
         }
 
         private void NodeMouseLeave(object sender, MouseEventArgs e)
         {
-            if (diagram.HighlightMode == HighlightMode.MouseEnter)
+            if (diagram.HighlightMode == HighlightMode.Hybryd)
+            {
+
+                if (!clicked)
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
+
+
+            }
+            else if (diagram.HighlightMode == HighlightMode.MouseEnter)
             {
                 diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
             }
+
+
         }
 
         private void NodeMouseLeftButtonUp(object sender, MouseEventArgs e)
         {
-            if (diagram.HighlightMode == HighlightMode.MouseLeftButtonUp)
+            if (diagram.HighlightMode == HighlightMode.Hybryd)
+            {
+                var j = diagram.GetValue(SankeyDiagram.HighlightNodeProperty);
+                string source = ((FrameworkElement)e.OriginalSource).Tag.ToString();
+                if (diagram.GetValue(SankeyDiagram.HighlightLinkProperty) != null)
+                {
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightLinkProperty, null);
+                }
+                if (diagram.GetValue(SankeyDiagram.HighlightNodeProperty) == null)
+                {
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
+                }
+                else if (j.ToString() != ((FrameworkElement)e.OriginalSource).Tag.ToString())
+                {
+                    diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
+                    clicked = true;
+                }
+                else if (j.ToString() == ((FrameworkElement)e.OriginalSource).Tag.ToString())
+                {
+                    if (clicked == false && j.ToString() != ((FrameworkElement)e.OriginalSource).Tag.ToString())
+                        diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
+
+                    clicked = !clicked;
+                }
+
+
+            }
+            else if (diagram.HighlightMode == HighlightMode.MouseEnter)
             {
                 diagram.SetCurrentValue(SankeyDiagram.HighlightNodeProperty, ((FrameworkElement)e.OriginalSource).Tag as string);
             }
-        }
 
+        }
+        public bool clicked = false;
         #endregion
 
         #endregion

@@ -104,7 +104,7 @@
                                           LinkCurvature="{Binding SankeyLinkCurvature}"
                                           SankeyFlowDirection="{Binding SankeyFlowDirection}"
                                           ShowLabels="{Binding SankeyShowLabels}"
-                                          HighlightMode="{Binding SankeyHighlightMode}"
+                                          HighlightMode="Hybryd"
                                           NodeBrushes="{Binding SankeyNodeBrushes}"
                                           HighlightNode="{Binding HighlightSankeyNode}"
                                           HighlightLink="{Binding HighlightSankeyLink}" />

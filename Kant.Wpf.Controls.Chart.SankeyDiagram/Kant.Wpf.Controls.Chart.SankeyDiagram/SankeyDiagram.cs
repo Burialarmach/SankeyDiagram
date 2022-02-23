@@ -75,7 +75,7 @@ namespace Kant.Wpf.Controls.Chart
             {
                 if (disposing)
                 {
-                    if(assist != null)
+                    if (assist != null)
                     {
                         assist.ClearDiagram();
                     }
@@ -242,7 +242,7 @@ namespace Kant.Wpf.Controls.Chart
             set { SetValue(LabelStyleProperty, value); }
         }
 
-        public static readonly DependencyProperty LabelStyleProperty = DependencyProperty.Register("LabelStyle", typeof(Style), typeof(SankeyDiagram),new PropertyMetadata(null, OnLabelStyleSourceChanged));
+        public static readonly DependencyProperty LabelStyleProperty = DependencyProperty.Register("LabelStyle", typeof(Style), typeof(SankeyDiagram), new PropertyMetadata(null, OnLabelStyleSourceChanged));
 
         public string HighlightNode
         {

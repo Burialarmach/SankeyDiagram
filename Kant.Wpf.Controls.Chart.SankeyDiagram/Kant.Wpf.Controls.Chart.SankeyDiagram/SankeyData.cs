@@ -15,12 +15,12 @@ namespace Kant.Wpf.Controls.Chart
 
         public SankeyData(string from, string to, double weight, Brush linkBrush = null)
         {
-            if(string.IsNullOrEmpty(from))
+            if (string.IsNullOrEmpty(from))
             {
                 throw new ArgumentOutOfRangeException("from node name is null");
             }
 
-            if(string.IsNullOrEmpty(to))
+            if (string.IsNullOrEmpty(to))
             {
                 throw new ArgumentOutOfRangeException("to node name is null");
             }
@@ -29,7 +29,7 @@ namespace Kant.Wpf.Controls.Chart
             To = to;
             Weight = weight;
 
-            if(linkBrush != null)
+            if (linkBrush != null)
             {
                 LinkBrush = linkBrush;
             }
