@@ -1,6 +1,7 @@
+!  Rushed fork to implement some fetures, code could be dirty
 A powerful  and easy to use WPF library for drawing Sankey diagram.
   
-  Rushed fork to implement some fetures, code could be dirty
+
   
   #Added hybrid selection mode
   
